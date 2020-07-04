@@ -3,19 +3,19 @@ package caliban.validation
 import caliban.CalibanError.ValidationError
 import caliban.InputValue.VariableValue
 import caliban.Value.NullValue
-import caliban.execution.{ ExecutionRequest, Field => F }
+import caliban.execution.{ExecutionRequest, Field => F}
 import caliban.introspection.Introspector
 import caliban.introspection.adt._
 import caliban.introspection.adt.__TypeKind._
 import caliban.parsing.SourceMapper
-import caliban.parsing.adt.Definition.ExecutableDefinition.{ FragmentDefinition, OperationDefinition }
-import caliban.parsing.adt.Definition.{ TypeSystemDefinition, TypeSystemExtension }
+import caliban.parsing.adt.Definition.ExecutableDefinition.{FragmentDefinition, OperationDefinition}
+import caliban.parsing.adt.Definition.{TypeSystemDefinition, TypeSystemExtension}
 import caliban.parsing.adt.OperationType._
-import caliban.parsing.adt.Selection.{ Field, FragmentSpread, InlineFragment }
+import caliban.parsing.adt.Selection.{Field, FragmentSpread, InlineFragment}
 import caliban.parsing.adt.Type.NamedType
 import caliban.parsing.adt._
-import caliban.schema.{ RootSchema, RootSchemaBuilder, RootType, Types }
-import caliban.{ InputValue, Rendering, Value }
+import caliban.schema.{RootSchema, RootSchemaBuilder, RootType, Types}
+import caliban.{InputValue, Rendering, Value}
 import zio.IO
 
 object Validator {
@@ -144,19 +144,27 @@ object Validator {
     }
 
   private def collectVariablesUsed(context: Context, selectionSet: List[Selection]): Set[String] = {
-    def collectValues(selectionSet: List[Selection]): List[InputValue] =
-      selectionSet.flatMap {
+    def collectValues(selectionSet: List[Selection]): List[InputValue] = {
+      val inputValues = List.newBuilder[InputValue]
+      selectionSet.foreach {
         case FragmentSpread(name, directives) =>
-          directives.flatMap(_.arguments.values) ++ context.fragments
-            .get(name)
-            .fold(List.empty[InputValue])(f =>
-              f.directives.flatMap(_.arguments.values) ++ collectValues(f.selectionSet)
-            )
+          directives.foreach(inputValues ++= _.arguments.values)
+          context.fragments.get(name)
+            .foreach { f =>
+              f.directives.foreach(inputValues ++= _.arguments.values)
+              inputValues ++= collectValues(f.selectionSet)
+            }
         case Field(_, _, arguments, directives, selectionSet, _) =>
-          arguments.values ++ directives.flatMap(_.arguments.values) ++ collectValues(selectionSet)
+          inputValues ++= arguments.values
+          directives.foreach(inputValues ++= _.arguments.values)
+          inputValues ++= collectValues(selectionSet)
         case InlineFragment(_, directives, selectionSet) =>
-          directives.flatMap(_.arguments.values) ++ collectValues(selectionSet)
+          directives.foreach(inputValues ++= _.arguments.values)
+          inputValues ++= collectValues(selectionSet)
       }
+      inputValues.result()
+    }
+
     def collectVariableValues(values: List[InputValue]): List[VariableValue] =
       values.flatMap({
         case InputValue.ListValue(values)   => collectVariableValues(values)

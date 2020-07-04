@@ -10,15 +10,15 @@ import caliban.parsing.adt.Directive
 import caliban.schema.Annotations._
 import caliban.schema.Step._
 import caliban.schema.Types._
-import caliban.{ InputValue, ResponseValue }
+import caliban.{InputValue, ResponseValue}
 import magnolia._
 import zio.query.ZQuery
 import zio.stream.ZStream
-import zio.{ URIO, ZIO }
-
+import zio.{URIO, ZIO}
 import scala.annotation.implicitNotFound
 import scala.concurrent.Future
 import scala.language.experimental.macros
+
 import zio.Chunk
 
 /**

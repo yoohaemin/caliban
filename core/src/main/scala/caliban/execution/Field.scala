@@ -17,11 +17,15 @@ case class Field(
   fields: List[Field] = Nil,
   conditionalFields: Map[String, List[Field]] = Map(),
   arguments: Map[String, InputValue] = Map(),
-  locationInfo: LocationInfo = LocationInfo.origin,
+  _locationInfo: () => LocationInfo = () => LocationInfo.origin,
   directives: List[Directive] = List.empty
-)
+) {
+  lazy val locationInfo: LocationInfo = _locationInfo()
+}
 
 object Field {
+
+
   def apply(
     selectionSet: List[Selection],
     fragments: Map[String, FragmentDefinition],
@@ -56,7 +60,7 @@ object Field {
                 field.fields,
                 field.conditionalFields,
                 arguments,
-                sourceMapper.getLocation(index),
+                () => sourceMapper.getLocation(index),
                 directives ++ schemaDirectives
               )
             ),

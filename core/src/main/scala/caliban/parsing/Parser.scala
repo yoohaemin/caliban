@@ -1,5 +1,7 @@
 package caliban.parsing
 
+import scala.annotation.{ switch, tailrec }
+
 import caliban.CalibanError.ParsingError
 import caliban.InputValue
 import caliban.InputValue._
@@ -30,7 +32,59 @@ object Parser {
   private def comment[_: P]: P[Unit]        = P("#" ~~ commentChar.repX)
   private def ignored[_: P]: P[Unit]        = P(unicodeBOM | whiteSpace | lineTerminator | comment | comma).repX
 
-  implicit val whitespace: P[_] => P[Unit] = { implicit ctx: ParsingRun[_] => ignored }
+  val whitespace: P[_] => P[Unit] = { implicit ctx: ParsingRun[_] => ignored }
+
+
+  implicit val whitespace2: P[_] => P[Unit] = new (P[_] => P[Unit]) {
+    // statuses
+    private final val Normal: Int                  = 0
+    private final val InsideLineComment: Int       = 1
+    private final val DetermineLineBreakStart: Int = 2
+
+    private final val UnicodeBOM   = '\uFEFF'
+    private final val WhiteSpace   = '\u0009'
+    private final val WhiteSpace2  = '\u0020'
+    private final val LF           = '\u000A'
+    private final val CR           = '\u000D'
+    private final val Comma        = ','
+    private final val CommentStart = '#'
+
+    override def apply(p: P[_]): P[Unit] = {
+      val input: ParserInput = p.input
+      val startIndex: Int    = p.index
+
+      loop(input, startIndex, state = Normal)(p)
+    }
+
+    @tailrec def loop(input: ParserInput, index: Int, state: Int)(implicit ctx: P[_]): ParsingRun[Unit] =
+      if (input.isReachable(index)) {
+        val currentChar = input(index)
+        (state: @switch) match {
+          case 0 => //Normal
+            (currentChar: @switch) match {
+              case UnicodeBOM | WhiteSpace | WhiteSpace2 | LF | Comma => loop(input, index + 1, Normal)
+              case CR                                                 => loop(input, index + 1, state = DetermineLineBreakStart)
+              case CommentStart                                       => loop(input, index + 1, state = InsideLineComment)
+              case _                                                  => ctx.freshSuccessUnit(index)
+            }
+          case 1 => //InsideLineComment
+            loop(
+              input,
+              index + 1,
+              state = (currentChar: @switch) match {
+                case CR => DetermineLineBreakStart
+                case LF => Normal
+                case _  => InsideLineComment
+              }
+            )
+          case 2 => //DetermineLineBreakStart
+            (currentChar: @switch) match {
+              case LF => loop(input, index + 1, state = Normal)
+              case _  => loop(input, index, state = Normal)
+            }
+        }
+      } else ctx.freshSuccessUnit(index)
+  }
 
   private def name[_: P]: P[String] = P(CharIn("_A-Za-z") ~~ CharIn("_0-9A-Za-z").repX).!
 
