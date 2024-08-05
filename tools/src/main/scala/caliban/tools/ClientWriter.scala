@@ -473,7 +473,7 @@ object ClientWriter {
         .map(collectFieldInfo(_, objectName, optionalUnion = false, optionalInterface = false, commonInterface = false))
       val view   = if (genView && fields.nonEmpty) "\n  " + writeView(typedef.name, fields.map(_.typeInfo)) else ""
 
-      val objectFields = fields ++ optionalUnionTypeFields ++ optionalInterfaceTypeFields
+      val objectFields = fields ::: optionalUnionTypeFields ::: optionalInterfaceTypeFields
 
       s"""object $objectName {$view
          |  ${objectFields.distinct.map(writeFieldInfo).mkString("\n  ")}
@@ -707,16 +707,16 @@ object ClientWriter {
       val enumCases = typedef.enumValuesDefinition
         .map(v =>
           s"case object ${safeEnumValue(v.enumValue)} extends $enumName { val value: String = ${"\"" + safeEnumValue(v.enumValue) + "\""} }"
-        ) ++
-        (if (extensibleEnums) Some(s"final case class __Unknown(value: String) extends $enumName") else None)
+        ) :::
+        (if (extensibleEnums) List(s"final case class __Unknown(value: String) extends $enumName") else Nil)
 
       val decoderCases = typedef.enumValuesDefinition
-        .map(v => s"""case __StringValue ("${v.enumValue}") => Right($enumName.${safeEnumValue(v.enumValue)})""") ++
-        (if (extensibleEnums) Some(s"case __StringValue (other) => Right($enumName.__Unknown(other))") else None)
+        .map(v => s"""case __StringValue ("${v.enumValue}") => Right($enumName.${safeEnumValue(v.enumValue)})""") :::
+        (if (extensibleEnums) List(s"case __StringValue (other) => Right($enumName.__Unknown(other))") else Nil)
 
       val encoderCases = typedef.enumValuesDefinition
-        .map(v => s"""case ${typedef.name}.${safeEnumValue(v.enumValue)} => __EnumValue("${v.enumValue}")""") ++
-        (if (extensibleEnums) Some(s"case ${typedef.name}.__Unknown (value) => __EnumValue(value)") else None)
+        .map(v => s"""case ${typedef.name}.${safeEnumValue(v.enumValue)} => __EnumValue("${v.enumValue}")""") :::
+        (if (extensibleEnums) List(s"case ${typedef.name}.__Unknown (value) => __EnumValue(value)") else Nil)
 
       val enumObject =
         if (typedef.enumValuesDefinition.nonEmpty) {

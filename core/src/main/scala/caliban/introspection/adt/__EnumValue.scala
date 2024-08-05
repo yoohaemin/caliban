@@ -23,6 +23,6 @@ case class __EnumValue(
              List(deprecationReason.map(reason => "reason" -> StringValue(reason))).flatten.toMap
            )
          )
-       else Nil) ++ directives.getOrElse(Nil)
+       else Nil) ::: directives.getOrElse(Nil)
     )
 }

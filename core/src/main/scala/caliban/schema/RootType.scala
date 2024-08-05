@@ -15,10 +15,10 @@ case class RootType(
 
   val types: Map[String, __Type] = {
     val init = additionalTypes.foldLeft(List.empty[__Type]) { case (acc, t) => collectTypes(t, acc) }
-    (init ++
-      primitiveTypes ++
-      collectTypes(queryType, init) ++
-      mutationType.fold(List.empty[__Type])(collectTypes(_, init)) ++
+    (init :::
+      primitiveTypes :::
+      collectTypes(queryType, init) :::
+      mutationType.fold(List.empty[__Type])(collectTypes(_, init)) :::
       subscriptionType.fold(List.empty[__Type])(collectTypes(_, init)))
       .groupBy(t => (t.name, t.kind, t.origin))
       .flatMap(_._2.headOption)

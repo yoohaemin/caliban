@@ -117,10 +117,10 @@ trait CommonSchemaDerivation[R] {
                 p.annotations.collectFirst { case GQLDeprecated(_) => () }.isDefined,
                 p.annotations.collectFirst { case GQLDeprecated(reason) => reason },
                 Option(
-                  p.annotations.collect { case GQLDirective(dir) => dir }.toList ++ {
+                  p.annotations.collect { case GQLDirective(dir) => dir }.toList ::: {
                     if (config.enableSemanticNonNull && isSemanticNonNull)
-                      Some(SchemaUtils.SemanticNonNull)
-                    else None
+                      List(SchemaUtils.SemanticNonNull)
+                    else Nil
                   }
                 ).filter(_.nonEmpty)
               )

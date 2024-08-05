@@ -282,7 +282,7 @@ object IntrospectionClient {
               __Directive.locations ~
               __Directive.args(inputValue)).mapN(mapDirective(_, _, _, _, isRepeatable = false))
         }
-    }.map { case (schema, types, directives) => Document(schema :: types ++ directives, SourceMapper.empty) }
+    }.map { case (schema, types, directives) => Document(schema :: types ::: directives, SourceMapper.empty) }
 
   final class Config(
     val supportDeprecatedArgs: Boolean = true,

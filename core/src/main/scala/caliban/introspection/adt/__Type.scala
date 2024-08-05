@@ -32,14 +32,14 @@ case class __Type(
     kind,
     (name ++ that.name).reduceOption((_, b) => b),
     (description ++ that.description).reduceOption((_, b) => b),
-    args => (fields(args) ++ that.fields(args)).reduceOption(_ ++ _),
-    () => (interfaces() ++ that.interfaces()).reduceOption(_ ++ _),
-    (possibleTypes ++ that.possibleTypes).reduceOption(_ ++ _),
-    args => (enumValues(args) ++ that.enumValues(args)).reduceOption(_ ++ _),
-    args => (inputFields(args) ++ that.inputFields(args)).reduceOption(_ ++ _),
+    args => (fields(args) ++ that.fields(args)).reduceOption(_ ::: _),
+    () => (interfaces() ++ that.interfaces()).reduceOption(_ ::: _),
+    (possibleTypes ++ that.possibleTypes).reduceOption(_ ::: _),
+    args => (enumValues(args) ++ that.enumValues(args)).reduceOption(_ ::: _),
+    args => (inputFields(args) ++ that.inputFields(args)).reduceOption(_ ::: _),
     (ofType ++ that.ofType).reduceOption(_ |+| _),
     (specifiedBy ++ that.specifiedBy).reduceOption((_, b) => b),
-    (directives ++ that.directives).reduceOption(_ ++ _),
+    (directives ++ that.directives).reduceOption(_ ::: _),
     (origin ++ that.origin).reduceOption((_, b) => b)
   )
 
@@ -62,7 +62,7 @@ case class __Type(
             description,
             name.getOrElse(""), {
               val dirs = directives.getOrElse(Nil)
-              dirs ++
+              dirs :::
                 specifiedBy
                   .map(url => Directive("specifiedBy", Map("url" -> StringValue(url)), dirs.size))
                   .toList

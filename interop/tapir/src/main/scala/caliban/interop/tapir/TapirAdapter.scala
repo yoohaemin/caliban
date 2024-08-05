@@ -63,7 +63,7 @@ object TapirAdapter {
       copy(headers = Header(key, value) :: headers)
 
     def withHeaders(_headers: List[Header]): TapirResponse =
-      copy(headers = _headers ++ headers)
+      copy(headers = _headers ::: headers)
   }
 
   object TapirResponse {

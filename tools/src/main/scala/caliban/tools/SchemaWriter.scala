@@ -377,7 +377,7 @@ object SchemaWriter {
           typeDef.fields.collect { case f if f.args.nonEmpty => (f, typeDef) }
         )
 
-      (fromObjects ++ fromInterfaces).map { case (field, typeDef) => writeArguments(field, typeDef) }
+      (fromObjects ::: fromInterfaces).map { case (field, typeDef) => writeArguments(field, typeDef) }
         .mkString("\n")
     }
 
@@ -403,7 +403,7 @@ object SchemaWriter {
           }
         }
 
-      val newtypeClasses = (fromObjects ++ fromInputTypes)
+      val newtypeClasses = (fromObjects ::: fromInputTypes)
         .groupBy(_.directive.arguments("name").toInputString)
         .map(_._2.head)
         .toList

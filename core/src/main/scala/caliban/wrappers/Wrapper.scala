@@ -134,7 +134,7 @@ object Wrapper {
    */
   case class CombinedWrapper[-R](wrappers: List[Wrapper[R]]) extends Wrapper[R] {
     override def |+|[R1 <: R](that: Wrapper[R1]): Wrapper[R1] = that match {
-      case CombinedWrapper(other) => copy(wrappers = wrappers ++ other)
+      case CombinedWrapper(other) => copy(wrappers = wrappers ::: other)
       case other                  => copy(wrappers = wrappers :+ other)
     }
 

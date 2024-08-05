@@ -258,7 +258,7 @@ object CostEstimation {
           ObjectValue(
             resp.extensions.foldLeft[List[(String, ResponseValue)]](
               List(COST_EXTENSION_NAME -> FloatValue(cost))
-            )(_ ++ _.fields)
+            )(_ ::: _.fields)
           )
         )
       )
@@ -278,7 +278,7 @@ object CostEstimation {
     @tailrec
     def go(fields: List[Field], total: Double): Double = fields match {
       case Nil          => total
-      case head :: tail => go(head.fields ++ tail, f(head) + total)
+      case head :: tail => go(head.fields ::: tail, f(head) + total)
     }
 
     go(List(field), 0.0)
@@ -289,7 +289,7 @@ object CostEstimation {
     def go(fields: List[Field], result: List[URIO[R, Double]]): List[URIO[R, Double]] = fields match {
       case Nil          => result
       case head :: tail =>
-        go(head.fields ++ tail, f(head) :: result)
+        go(head.fields ::: tail, f(head) :: result)
     }
 
     ZIO.mergeAllPar(go(List(field), Nil))(0.0)(_ + _)

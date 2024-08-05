@@ -24,7 +24,7 @@ case class __Field(
                                List(deprecationReason.map(reason => "reason" -> StringValue(reason))).flatten.toMap
                              )
                            )
-                         else Nil) ++ directives.getOrElse(Nil)
+                         else Nil) ::: directives.getOrElse(Nil)
     FieldDefinition(description, name, allArgs.map(_.toInputValueDefinition), _type.toType(), allDirectives)
   }
 

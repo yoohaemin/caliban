@@ -24,7 +24,7 @@ object SchemaComparison {
       left.directiveDefinitions.map(t => t.name -> t).toMap,
       right.directiveDefinitions.map(t => t.name -> t).toMap
     )
-    schemaChanges ++ typeChanges ++ directiveChanges
+    schemaChanges ::: typeChanges ::: directiveChanges
   }
 
   private def compareEnumValues(
@@ -41,7 +41,7 @@ object SchemaComparison {
       enumTarget
     )
 
-    descriptionChanges ++ directiveChanges
+    descriptionChanges ::: directiveChanges
   }
 
   private def compareAllEnumValues(
@@ -56,7 +56,7 @@ object SchemaComparison {
     val commonTypes = leftKeys intersect rightKeys
     val changes     = commonTypes.toList.flatMap(key => compareEnumValues(typeName, left(key), right(key)))
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareEnums(left: EnumTypeDefinition, right: EnumTypeDefinition): List[SchemaComparisonChange] =
@@ -72,7 +72,7 @@ object SchemaComparison {
     val added     = (rightKeys -- leftKeys).map(UnionMemberAdded(left.name, _)).toList
     val deleted   = (leftKeys -- rightKeys).map(UnionMemberDeleted(left.name, _)).toList
 
-    added ++ deleted
+    added ::: deleted
   }
 
   private def compareDirectives(
@@ -90,7 +90,7 @@ object SchemaComparison {
       else List(DirectiveArgumentChanged(left.name, key, left.arguments(key), right.arguments(key), target))
     )
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareAllDirectives(
@@ -105,7 +105,7 @@ object SchemaComparison {
     val commonFields = leftKeys intersect rightKeys
     val changes      = commonFields.toList.flatMap(key => compareDirectives(left(key), right(key), target))
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareArgumentDefinition(
@@ -127,7 +127,7 @@ object SchemaComparison {
       if (left.ofType != right.ofType) List(TypeChanged(left.ofType, right.ofType, argTarget)) else Nil
 
     // default values are not supported so far
-    descriptionChanges ++ directiveChanges ++ ofTypeChanges
+    descriptionChanges ::: directiveChanges ::: ofTypeChanges
   }
 
   private def compareArguments(
@@ -144,7 +144,7 @@ object SchemaComparison {
     val commonFields = leftKeys intersect rightKeys
     val changes      = commonFields.toList.flatMap(key => compareArgumentDefinition(left(key), right(key), target))
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareDescriptions(
@@ -181,7 +181,7 @@ object SchemaComparison {
         fieldTarget
       )
 
-    descriptionChanges ++ directiveChanges ++ ofTypeChanges ++ argumentChanges
+    descriptionChanges ::: directiveChanges ::: ofTypeChanges ::: argumentChanges
   }
 
   private def compareAllFields(
@@ -196,7 +196,7 @@ object SchemaComparison {
     val commonTypes = leftKeys intersect rightKeys
     val changes     = commonTypes.toList.flatMap(key => compareFields(typeName, left(key), right(key)))
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareObjects(left: ObjectTypeDefinition, right: ObjectTypeDefinition): List[SchemaComparisonChange] = {
@@ -210,7 +210,7 @@ object SchemaComparison {
     val fieldChanges =
       compareAllFields(left.name, left.fields.map(f => f.name -> f).toMap, right.fields.map(f => f.name -> f).toMap)
 
-    implementsAdded ++ implementsDeleted ++ fieldChanges
+    implementsAdded ::: implementsDeleted ::: fieldChanges
   }
 
   private def compareInputObjects(
@@ -249,7 +249,7 @@ object SchemaComparison {
         case (l, r)                                                       => List(TypeKindChanged(left.name, l.toString, r.toString))
       }
 
-    descriptionChanges ++ directiveChanges ++ typeChanges
+    descriptionChanges ::: directiveChanges ::: typeChanges
   }
 
   private def isBuiltinScalar(name: String): Boolean =
@@ -266,7 +266,7 @@ object SchemaComparison {
     val commonTypes = leftKeys intersect rightKeys
     val changes     = commonTypes.toList.flatMap(key => compareTypes(left(key), right(key)))
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareDirectiveDefinitions(
@@ -289,7 +289,7 @@ object SchemaComparison {
     val locationDeleted =
       (left.locations -- right.locations).map(l => DirectiveLocationDeleted(l, left.name)).toList
 
-    descriptionChanges ++ argChanges ++ repeatableChanges ++ locationAdded ++ locationDeleted
+    descriptionChanges ::: argChanges ::: repeatableChanges ::: locationAdded ::: locationDeleted
   }
 
   private def compareAllDirectiveDefinitions(
@@ -303,7 +303,7 @@ object SchemaComparison {
     val commonDirectives = leftKeys intersect rightKeys
     val changes          = commonDirectives.toList.flatMap(key => compareDirectiveDefinitions(left(key), right(key)))
 
-    added ++ deleted ++ changes
+    added ::: deleted ::: changes
   }
 
   private def compareSchemas(

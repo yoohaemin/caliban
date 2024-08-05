@@ -81,7 +81,7 @@ case class GraphQLUploadRequest(
     @tailrec
     def loop[A](xs: List[A], idx: Int, acc: List[A], f: A => A): List[A] =
       (xs, idx) match {
-        case (x :: xs, 0)   => (f(x) :: acc).reverse ++ xs
+        case (x :: xs, 0)   => (f(x) :: acc).reverse ::: xs
         case (Nil, _)       => acc.reverse
         case (x :: xs, idx) => loop(xs, idx - 1, x :: acc, f)
       }

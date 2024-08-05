@@ -139,7 +139,7 @@ object ApolloCaching {
         fieldInfo: FieldInfo
       ): ZQuery[R1, ExecutionError, ResponseValue] = {
         val cacheDirectives = extractCacheDirective(
-          fieldInfo.directives ++ fieldInfo.details.fieldType.ofType.flatMap(_.directives).getOrElse(Nil)
+          fieldInfo.directives ::: fieldInfo.details.fieldType.ofType.flatMap(_.directives).getOrElse(Nil)
         )
 
         cacheDirectives.foldLeft(query) { case (q, cacheDirective) =>

@@ -27,7 +27,7 @@ case class __InputValue(
                                List(deprecationReason.map(reason => "reason" -> StringValue(reason))).flatten.toMap
                              )
                            )
-                         else Nil) ++ directives.getOrElse(Nil)
+                         else Nil) ::: directives.getOrElse(Nil)
     InputValueDefinition(description, name, _type.toType(), default, allDirectives)
   }
 
